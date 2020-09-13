@@ -1,6 +1,5 @@
 <template>
   <div id="app">
-   
           <sidebar></sidebar>
           <router-view></router-view>
   </div>
@@ -66,5 +65,7 @@
     #app {
       display: flex;
       align-items: stretch;
+      max-height: 100vh;
+      max-width: 100vh;
   }
 </style>
