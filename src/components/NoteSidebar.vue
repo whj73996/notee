@@ -26,44 +26,56 @@
 </template>
 
 <script>
-  import Notebooks from '../apis/notebooks'
   import Notes from '../apis/notes'
-  import Bus from '../helpers/bus'
+  import {mapMutations,mapState,mapActions,mapGetters}from 'vuex'
   export default {
     created() {
-      Notebooks.getAll()
-        .then(res => {
-          this.notebooks = res.data
-          console.log(this.notebooks)
-          this.curBook =(this.$route.query.notebookId && this.notebooks.find(notebook => notebook.id.toString() === this.$route.query.notebookId))
-            || this.notebooks[0] || {}
-          return Notes.getAll({ notebookId: this.curBook.id })
-        }).then(res => {
-        this.notes = res.data
-        this.$emit('update:notes', this.notes)
-        Bus.$emit('update:notes', this.notes)
-      })
+      this.getNotebooks()
+        .then(()=>{
+          this.$store.commit('setCurBook',{curBookId:this.$route.query.notebookId})
+          this.$store.dispatch('getNotes',{noteBookId:this.curBook.id})
+        })
+
+      // Notebooks.getAll()
+      //   .then(res => {
+      //     this.notebooks = res.data
+      //     this.curBook =(this.$route.query.notebookId && this.notebooks.find(notebook => notebook.id.toString() === this.$route.query.notebookId))
+      //       || this.notebooks[0] || {}
+      //     return Notes.getAll({ notebookId: this.curBook.id })
+      //   }).then(res => {
+      //   this.notes = res.data
+      //   this.$emit('update:notes', this.notes)
+      //   Bus.$emit('update:notes', this.notes)
+      // })
     },
 
     data() {
       return {
-        notebooks: [],
-        notes:[],
-        curBook: [],
       }
+    },
+    computed:{
+      ...mapGetters([
+        'notebooks',
+        'notes',
+        'curBook'
+      ])
     },
 
     methods: {
+      ...mapActions([
+        'getNotebooks',
+        'getNotes'
+      ]),
+
       handleCommand(notebookId) {
         if(notebookId === 'trash') {
           return this.$router.push({ path: '/trash'})
         }
-        this.curBook = this.notebooks.find(notebook => notebook.id === notebookId)
-        Notes.getAll({ notebookId })
-          .then(res => {
-            this.notes = res.data
-            this.$emit('update:notes', this.notes)
-          })
+        console.log('----------')
+
+        console.log(notebookId)
+        this.$store.commit('setCurBook',{curBookId:notebookId})
+        this.$store.dispatch('getNotes',{noteBookId:notebookId})
       },
 
       addNote() {

@@ -4,20 +4,21 @@
 
     <div class="note-detail">
       <div class="note-empty" v-if="!curNote.id">请选择笔记</div>
-      <div v-else >
+      <div v-else class="note-detail-ct">
         <div class="note-bar">
           <span>创建日期：{{curNote.createdAtFriendly}}</span>
           <span>更新日期：{{curNote.updatedAtFriendly}}</span>
           <span class="status" :class="{'status-input':isInput,'status-wrong':isWrong}">{{statusText}}</span>
           <span class="iconfont icon-delete" @click="deleteNote"></span>
-          <span class="iconfont icon-fullscreen" ></span>
+          <span class="iconfont icon-fullscreen" @click="isShowPreview=!isShowPreview"></span>
         </div>
         <div class="note-title">
           <input type="text" v-model="curNote.title" @input="updateNote" @keydown="status" placeholder="输入标题"></input>
         </div>
         <div class="editor">
-          <textarea v-show="true" v-model="curNote.content" @input="updateNote" @keydown="status" placeholder="输入内容，支持 markdown 语法"></textarea>
-          <div class="preview markdown-body" v-html="" v-show="false"></div>
+          <textarea v-show="!isShowPreview" v-model="curNote.content" @input="updateNote" @keydown="status" placeholder="输入内容，支持 markdown 语法"></textarea>
+          <div class="preview markdown-body" v-html="previewContent" v-show="isShowPreview">
+          </div>
         </div>
       </div>
     </div>
@@ -30,6 +31,8 @@
   import Bus from  '../helpers/bus'
   import _ from 'lodash'
   import Notes from '../apis/notes'
+  import  MarkdownIt from 'markdown-it'
+  let md = new MarkdownIt();
 
   export default {
     name: 'NoteDetail',
@@ -41,7 +44,13 @@
         notes:[],
         statusText:'笔记未更改',
         isInput:false,
-        isWrong:false
+        isWrong:false,
+        isShowPreview:false
+      }
+    },
+    computed:{
+      previewContent(){
+        return md.render(this.curNote.content)
       }
     },
     methods:{
@@ -60,8 +69,9 @@
         Notes.deleteNote({noteId:this.curNote.id})
         .then(data=>{
           this.$message.success(data.msg)
-          this.notes.split(this.notes.indexOf(this.curNote),1)
-
+          console.log(this.notes.indexOf(this.curNote))
+          this.notes.splice(this.notes.indexOf(this.curNote),1)
+          this.$router.replace('/note')
         })
         .catch(data=>{
           this.$message.error(data.msg)
@@ -94,6 +104,7 @@
 
 <style lang="less" scoped>
   @import url(../assets/css/note-detail.less);
+
 
   #note {
     display: flex;
